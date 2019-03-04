@@ -1,0 +1,114 @@
+import sys
+sys.path.append('C:\\Users\\DELL\\lib\\site-packages')
+import pygame
+import random
+pygame.init()
+width = 400
+hieght=550
+RED = (250,0,0)
+GREEN=(0,250,0)
+YELLOW=(250,250,0)
+position = [300,hieght - 80]
+play_size= 40
+rec_width= 40
+rec_hieght=40
+killer_size=40
+SPEED=20
+clock=pygame.time.Clock()
+myFont = pygame.font.SysFont("monospace",35)
+killer_position=[random.randint(0,width-killer_size),0]
+killer_list=[killer_position]
+background_color=(0,0,0)
+rec_size=[rec_width,rec_hieght]
+screen=pygame.display.set_mode((width,hieght))
+game_over = False
+score = 0
+
+def speed_level(score,SPEED):
+    if score<15:
+        SPEED = 10
+    elif score<30:
+        SPEED = 15
+    elif score<50:
+        SPEED = 20
+    elif score>60:
+        SPEED = 25
+    return SPEED
+
+def drop_killer(killer_list):
+    delay = random.random()
+    if len(killer_list) < 10 and delay < 0.1:
+        x_pos = random.randint(0,width - killer_size)
+        y_pos = 0
+        killer_list.append([x_pos,y_pos])
+
+def draw_killer(killer_list):
+    for killer_position in killer_list:
+        pygame.draw.rect(screen, GREEN, (killer_position[0], killer_position[1], killer_size, killer_size))
+
+def update_killer_position(killer_list,score):
+    for index, killer_position in enumerate(killer_list):
+        if killer_position[1]>=0 and killer_position[1]<hieght:
+            killer_position[1] += SPEED
+        else:
+            killer_list.pop(index)
+            score+=1
+        return score
+def collision_check(killer_list,position):
+    for killer_position in killer_list:
+        if collision(position,killer_position):
+            return True
+        else:
+            return False
+
+
+def collision(position,killer_position):
+    play_x = position[0]
+    play_y = position[1]
+    k_x = killer_position[0]
+    k_y = killer_position[1]
+    if play_x >= k_x and (play_x < (k_x + play_size)) or k_x >= play_x and (k_x < (play_x + killer_size)):
+        if play_y >= k_y and (play_y < (k_y + play_size)) or k_y >= play_y and (k_y < (play_y + killer_size)):
+            return True
+        return False
+
+while not game_over:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+        if event.type==pygame.KEYDOWN:
+            x=position[0]
+            y=position[1]
+            if event.key==pygame.K_j:
+                x -= 40
+            elif event.key==pygame.K_l:
+                x+= 40
+            elif event.key==pygame.K_a:
+                y-=40
+            elif event.key==pygame.K_d:
+                y+=40
+            position = [x,y]
+    screen.fill(background_color)
+
+    # if killer_position[1]>=0 and killer_position[1]<hieght:
+    #     killer_position[1] += SPEED
+    # else:
+    #     killer_position[1]=0
+    #     killer_position[0]=random.randint(0,width-killer_size)
+    #
+    drop_killer(killer_list)
+    score = update_killer_position(killer_list,score)
+
+    text = "Score:" + str(score)
+    label = myFont.render(text,1,YELLOW)
+    screen.blit(label,(width-200,hieght-40))
+    SPEED = speed_level(score, SPEED)
+    if collision_check(killer_list,position):
+        game_over = True
+        break
+    draw_killer(killer_list)
+    pygame.draw.rect(screen,RED,(position[0],position[1],rec_width,rec_hieght) )
+    pygame.draw.rect(screen, GREEN, (killer_position[0], killer_position[1], killer_size, killer_size))
+    pygame.display.update()
+    clock.tick(30)
+print('Final score:'+str(score))
